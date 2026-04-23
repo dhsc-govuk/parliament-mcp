@@ -47,33 +47,12 @@ class ParliamentMCPSettings(BaseSettings):
     def SENTRY_DSN(self) -> str | None:
         return get_environment_or_ssm("SENTRY_DSN", f"/{self._get_project_name()}/env_secrets/SENTRY_DSN")
 
+    # Bedrock
     @property
-    def AZURE_OPENAI_API_KEY(self) -> str:
+    def BEDROCK_EMBEDDINGS_MODEL(self) -> str:
         return get_environment_or_ssm(
-            "AZURE_OPENAI_API_KEY",
-            f"/{self._get_project_name()}/env_secrets/AZURE_OPENAI_API_KEY",
-        )
-
-    @property
-    def AZURE_OPENAI_ENDPOINT(self) -> str:
-        return get_environment_or_ssm(
-            "AZURE_OPENAI_ENDPOINT",
-            f"/{self._get_project_name()}/env_secrets/AZURE_OPENAI_ENDPOINT",
-        )
-
-    @property
-    def AZURE_OPENAI_EMBEDDING_MODEL(self) -> str:
-        return get_environment_or_ssm(
-            "AZURE_OPENAI_EMBEDDING_MODEL",
-            f"/{self._get_project_name()}/env_secrets/AZURE_OPENAI_EMBEDDING_MODEL",
-        )
-
-    @property
-    def AZURE_OPENAI_API_VERSION(self) -> str:
-        return get_environment_or_ssm(
-            "AZURE_OPENAI_API_VERSION",
-            f"/{self._get_project_name()}/env_secrets/AZURE_OPENAI_API_VERSION",
-            "preview",
+            "BEDROCK_EMBEDDINGS_MODEL",
+            f"/{self._get_project_name()}/env_secrets/BEDROCK_EMBEDDINGS_MODEL",
         )
 
     # Qdrant connection settings

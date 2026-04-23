@@ -1,5 +1,7 @@
 # Parliament MCP Server
 
+***In active development***
+
 An MCP server that roughly maps onto a subset of https://developer.parliament.uk/, as well as offering additional semantic search capabilities.
 
 ## Architecture
@@ -44,7 +46,7 @@ You will need
 - Docker and Docker Compose
 - Node.js (for mcp-remote)
 - Claude Desktop (or another MCP client)
-- **Azure OpenAI account with API access**
+- **AWS Account with Bedrock access**
 
 Create a `.env` file by copying the `.env.example` in the project root and replace the necessary variables.
 
@@ -262,7 +264,7 @@ The system works with two main types of parliamentary documents:
 **Data Loading Process**:
 1. **Fetch** from Parliamentary APIs (Hansard API, Parliamentary Questions API)
 2. **Transform** into structured models with computed fields
-3. **Embed** using Azure OpenAI for semantic search
+3. **Embed** using Bedrock Embeddings for semantic search
 4. **Index** into Qdrant with proper vector configurations
 
 Data is loaded automatically from official Parliamentary APIs - no manual document creation needed.
@@ -412,7 +414,6 @@ make qdrant_health
 - Verify Claude Desktop configuration is correct
 
 **Data Loading Failures**
-- Check Azure OpenAI credentials in `.env` file
 - Ensure Qdrant is running and accessible
 - Verify network connectivity to Parliamentary APIs
 - Use `--ll DEBUG` flag for detailed logging

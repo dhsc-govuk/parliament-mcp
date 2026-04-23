@@ -8,9 +8,9 @@ from mcp.server.fastmcp.server import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import Field
 
+from parliament_mcp.bedrock_helpers import get_bedrock_client
 from parliament_mcp.mcp_server.members import register_members_tools
 from parliament_mcp.mcp_server.qdrant_query_handler import QdrantQueryHandler
-from parliament_mcp.openai_helpers import get_openai_client
 from parliament_mcp.qdrant_helpers import get_async_qdrant_client
 from parliament_mcp.settings import settings
 
@@ -25,11 +25,11 @@ async def mcp_lifespan(_server: FastMCP) -> AsyncGenerator[dict]:
     """Manage application lifecycle with type-safe context"""
     # Initialize on startup
 
-    openai_client = get_openai_client(settings)
+    bedrock_client = get_bedrock_client(settings)
     async with get_async_qdrant_client(settings) as qdrant_client:
         yield {
-            "qdrant_query_handler": QdrantQueryHandler(qdrant_client, openai_client, settings),
-            "openai_client": openai_client,
+            "qdrant_query_handler": QdrantQueryHandler(qdrant_client, bedrock_client, settings),
+            "bedrock_client": bedrock_client,
         }
 
 
