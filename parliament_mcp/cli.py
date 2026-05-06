@@ -1,12 +1,12 @@
 import argparse
 import asyncio
 import logging
+import sys
 from datetime import UTC, datetime
 
 import dateparser
 import dotenv
 from qdrant_client import AsyncQdrantClient
-from rich.logging import RichHandler
 
 from parliament_mcp.qdrant_data_loaders import (
     QdrantHansardLoader,
@@ -25,21 +25,25 @@ logger = logging.getLogger(__name__)
 dotenv.load_dotenv()
 
 
-def configure_logging(level=logging.INFO, use_colors=True):
+def configure_logging(level=logging.INFO):
     """Configure logging for the parliament_mcp package.
 
     Args:
-        level: The logging level (e.g., logging.INFO, logging.WARNING)
-        use_colors: Whether to use colored output (requires rich)
+        level: The logging level as string from create_parser.
     """
-    if use_colors:
-        logging.basicConfig(
-            level=level,
-            format="%(message)s",
-            handlers=[RichHandler(rich_tracebacks=True)],
-        )
-    else:
-        logging.basicConfig(level=level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    log_levels = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL,
+    }
+    logging.basicConfig(
+        level=log_levels[level],
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        stream=sys.stdout,
+        force=True,
+    )
 
 
 async def delete_qdrant(qdrant_client: AsyncQdrantClient, settings: ParliamentMCPSettings):

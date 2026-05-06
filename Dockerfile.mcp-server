@@ -28,4 +28,4 @@ COPY ./parliament_mcp ./parliament_mcp
 RUN uv sync
 
 # Command to run the MCP server
-CMD ["uv", "run", "parliament-mcp", "serve", "--no-reload"]
+CMD ["uv", "run", "parliament-mcp", "serve", "--log-level", "INFO", "--no-reload"]
