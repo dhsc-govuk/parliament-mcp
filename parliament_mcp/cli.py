@@ -166,7 +166,7 @@ def main():
         from parliament_mcp.mcp_server.main import main as mcp_main
 
         # Debugging
-        logger.indo("Project name: %s", settings._get_project_name())  # noqa: SLF001
+        logger.info("Project name: %s", settings._get_project_name())  # noqa: SLF001
         logger.info("AWS region: %s", settings.AWS_REGION)
         logger.info("MCP allowed hosts: %s", settings.MCP_ALLOWED_HOSTS)
         logger.info("Qdrant url: %s", settings.QDRANT_URL)
