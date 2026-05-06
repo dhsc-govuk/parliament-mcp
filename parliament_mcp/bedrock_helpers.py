@@ -35,7 +35,7 @@ async def embed_single(
     text: str,
 ) -> list[float]:
     """Generate a single embedding for a text using Bedrock Embeddings."""
-    return client.aembed_query(text=text)
+    return await client.aembed_query(text=text)
 
 
 @retry(stop=stop_after_attempt(3))
@@ -60,7 +60,7 @@ async def embed_batch(
 
     for i, batch in enumerate(batched(texts, batch_size)):
         try:
-            response = client.aembed_documents(texts=batch)
+            response = await client.aembed_documents(texts=batch)
             all_embeddings.extend(response)
 
         except Exception:
