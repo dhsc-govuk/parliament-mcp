@@ -97,7 +97,13 @@ class ParliamentMCPSettings(BaseSettings):
 
     # Allowed hosts for MCP transport security (comma-separated)
     # Used to prevent DNS rebinding attacks
-    MCP_ALLOWED_HOSTS: str = "localhost,127.0.0.1,.execute-api.eu-west-2.amazonaws.com"
+    @property
+    def MCP_ALLOWED_HOSTS(self) -> str | None:
+        return get_environment_or_ssm(
+            env_var_name="MCP_ALLOWED_HOSTS",
+            ssm_path=f"/{self._get_project_name()}/env_secrets/MCP_ALLOWED_HOSTS",
+            default="localhost,127.0.0.1",
+        )
 
     # Rate limiting settings for parliament.uk API.
     HTTP_MAX_RATE_PER_SECOND: float = 10
