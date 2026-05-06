@@ -21,7 +21,9 @@ def get_ssm_parameter(parameter_name: str, region: str = "eu-west-2") -> str:
         return ""
 
 
-def get_environment_or_ssm(env_var_name: str, ssm_path: str | None = None, default: str = "") -> str:
+def get_environment_or_ssm(
+    env_var_name: str, ssm_path: str | None = None, ssm_region: str | None = "eu-west-2", default: str = ""
+) -> str:
     """Get value from environment variable or fall back to SSM parameter."""
     env_value = os.environ.get(env_var_name)
     if env_value:
@@ -29,8 +31,8 @@ def get_environment_or_ssm(env_var_name: str, ssm_path: str | None = None, defau
 
     # Only use SSM if not in local environment
     environment = os.environ.get("ENVIRONMENT", "local")
-    if ssm_path and os.environ.get("AWS_REGION") and environment != "local":
-        return get_ssm_parameter(ssm_path, os.environ.get("AWS_REGION"))
+    if ssm_path and environment != "local":
+        return get_ssm_parameter(ssm_path, ssm_region)
 
     return default
 
