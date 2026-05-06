@@ -17,7 +17,7 @@ def get_bedrock_client(settings: ParliamentMCPSettings) -> BedrockEmbeddings:
 
     bedrock_client = boto3.client(
         service_name="bedrock-runtime",
-        region_name=settings.AWS_REGION_NAME,
+        region_name=settings.AWS_REGION,
         config=config,
     )
 
