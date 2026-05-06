@@ -25,7 +25,7 @@ COPY pyproject.toml ./
 COPY ./parliament_mcp ./parliament_mcp
 
 # Install dependencies
-RUN uv sync --frozen
+RUN uv sync
 
 # Command to run the MCP server
 CMD ["uv", "run", "parliament-mcp", "serve", "--no-reload"]
