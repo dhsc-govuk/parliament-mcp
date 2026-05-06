@@ -161,6 +161,12 @@ def main():
         # Import here to avoid unnecessary dependencies
         from parliament_mcp.mcp_server.main import main as mcp_main
 
+        # Debugging
+        logger.info("AWS region: %s", settings.AWS_REGION)
+        logger.info("MCP allowed hosts: %s", settings.MCP_ALLOWED_HOSTS)
+        logger.info("Qdrant url: %s", settings.QDRANT_URL)
+        logger.info("Embeddings model: %s", settings.BEDROCK_EMBEDDINGS_MODEL)
+
         mcp_main(reload=args.reload)
     else:
         # Handle async commands
