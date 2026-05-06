@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 dotenv.load_dotenv()
 
 
-def configure_logging(level=logging.INFO):
+def configure_logging(level="INFO"):
     """Configure logging for the parliament_mcp package.
 
     Args:
