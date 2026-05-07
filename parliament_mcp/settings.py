@@ -30,7 +30,7 @@ def get_environment_or_ssm(
         return env_value
 
     # Only use SSM if not in local environment
-    environment = os.environ.get("ENVIRONMENT", "local")
+    environment = os.environ.get("ENVIRONMENT")
     if ssm_path and environment != "local":
         return get_ssm_parameter(ssm_path, ssm_region)
 
@@ -40,9 +40,9 @@ def get_environment_or_ssm(
 class ParliamentMCPSettings(BaseSettings):
     """Configuration settings for Parliament MCP application with environment-based loading."""
 
+    ENVIRONMENT: str | None = os.environ.get("ENVIRONMENT")
     AWS_ACCOUNT_ID: str | None = None
     AWS_REGION: str = "eu-west-2"
-    ENVIRONMENT: str = "local"
 
     # Use SSM for sensitive parameters in AWS environments
     @property
@@ -102,8 +102,8 @@ class ParliamentMCPSettings(BaseSettings):
     @property
     def MCP_ALLOWED_HOSTS(self) -> str | None:
         return get_environment_or_ssm(
-            env_var_name="MCP_ALLOWED_HOSTS",
-            ssm_path=f"/{self._get_project_name()}/env_secrets/MCP_ALLOWED_HOSTS",
+            "MCP_ALLOWED_HOSTS",
+            f"/{self._get_project_name()}/env_secrets/MCP_ALLOWED_HOSTS",
             default="localhost,127.0.0.1",
         )
 
