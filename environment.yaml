@@ -1,0 +1,9 @@
+name: parly-mcp
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - uv
+variables:
+  UV_PROJECT_ENVIRONMENT: C:\ProgramData\miniforge3\envs\parly-mcp
+prefix: C:\ProgramData\miniforge3\envs\parly-mcp
