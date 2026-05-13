@@ -21,11 +21,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy the entire package
-COPY pyproject.toml ./
-COPY ./parliament_mcp ./parliament_mcp
+COPY pyproject.toml uv.lock ./
+COPY parliament_mcp parliament_mcp
 
 # Install dependencies
-RUN uv sync
+RUN uv sync --frozen
 
 # Command to run the MCP server
 CMD ["uv", "run", "parliament-mcp", "--log-level", "INFO", "serve", "--no-reload"]

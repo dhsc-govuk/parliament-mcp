@@ -13,7 +13,7 @@ ENV COLUMNS=120
 RUN pip install uv
 
 # Copy the dependency definition files
-COPY pyproject.toml ./
+COPY uv.lock pyproject.toml ./
 COPY ./parliament_mcp ./parliament_mcp
 
 # Install the dependencies to system Python
