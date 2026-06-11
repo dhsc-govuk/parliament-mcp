@@ -25,13 +25,24 @@ logger = logging.getLogger(__name__)
 dotenv.load_dotenv()
 
 
-def configure_logging(level=logging.INFO, use_colors=True):
+def configure_logging(level: str = "INFO", use_colors: bool = True):
     """Configure logging for the parliament_mcp package.
 
     Args:
-        level: The logging level (e.g., logging.INFO, logging.WARNING)
+        level: The logging level as string,
+            (one of "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL").
         use_colors: Whether to use colored output (requires rich)
     """
+    log_levels = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL,
+    }
+
+    level = log_levels[level]
+
     if use_colors:
         logging.basicConfig(
             level=level,
