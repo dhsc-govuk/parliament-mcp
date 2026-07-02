@@ -20,8 +20,8 @@ from agents.mcp import MCPServerStreamableHttp, MCPServerStreamableHttpParams
 from qdrant_client import AsyncQdrantClient
 from testcontainers.qdrant import QdrantContainer
 
+from parliament_mcp.embeddings.openai_embeddings_provider import OpenAIEmbeddingsProvider
 from parliament_mcp.mcp_server.qdrant_query_handler import QdrantQueryHandler
-from parliament_mcp.openai_helpers import get_openai_client
 from parliament_mcp.qdrant_data_loaders import QdrantHansardLoader, QdrantParliamentaryQuestionLoader
 from parliament_mcp.qdrant_helpers import collection_exists, initialize_qdrant_collections
 from parliament_mcp.settings import settings
@@ -202,7 +202,8 @@ async def test_mcp_client(qdrant_test_client: AsyncQdrantClient) -> AsyncGenerat
 @pytest_asyncio.fixture(scope="function")
 async def test_mcp_agent(test_mcp_client: MCPServerStreamableHttp):
     """Agent fixture that uses test settings and running MCP server."""
-    client = get_openai_client(settings)
+    provider = OpenAIEmbeddingsProvider(settings)
+    client = provider.client
     agent = Agent(
         name="Parliament research assistant",
         model=OpenAIResponsesModel(openai_client=client, model="gpt-4o-mini"),
@@ -225,5 +226,5 @@ async def qdrant_cloud_test_client() -> AsyncGenerator[AsyncQdrantClient]:
 
 @pytest.fixture(scope="session")
 async def qdrant_query_handler(qdrant_test_client: AsyncQdrantClient):
-    openai_client = get_openai_client(settings)
-    return QdrantQueryHandler(qdrant_test_client, openai_client, settings)
+    openai_provider = OpenAIEmbeddingsProvider(settings)
+    return QdrantQueryHandler(qdrant_test_client, openai_provider, settings)

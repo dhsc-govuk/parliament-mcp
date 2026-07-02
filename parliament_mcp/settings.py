@@ -99,6 +99,14 @@ class ParliamentMCPSettings(BaseSettings):
             default="localhost,127.0.0.1",
         )
 
+    @property
+    def MODEL_PROVIDER(self) -> str | None:
+        return get_environment_or_ssm(
+            "MODEL_PROVIDER",
+            f"/{self._get_project_name()}/env_secrets/MODEL_PROVIDER",
+            default="azure_openai",
+        )
+
     # Rate limiting settings for parliament.uk API.
     HTTP_MAX_RATE_PER_SECOND: float = 10
 
@@ -159,16 +167,13 @@ class BedrockParliamentMCPSettings(ParliamentMCPSettings):
 def get_mcp_settings():
     settings_lookup = {"azure_openai": OpenAIParliamentMCPSettings, "aws_bedrock": BedrockParliamentMCPSettings}
 
-    llm_provider = os.environ.get("LLM_PROVIDER")
-    if not llm_provider:
-        msg = f"LLM_PROVIDER environment variable required. Must be one of {settings_lookup.keys()}"
-        raise InvalidLLMProviderError(msg)
+    default_settings = ParliamentMCPSettings()
+    provider = default_settings.MODEL_PROVIDER.lower()
+    if provider not in settings_lookup:
+        err_msg = f"MODEL_PROVIDER must be one of {list(settings_lookup.keys())}."
+        raise InvalidLLMProviderError(err_msg)
 
-    if llm_provider not in settings_lookup:
-        msg = f"LLM_PROVIDER must be one of {settings_lookup.keys()}"
-        raise InvalidLLMProviderError(msg)
-
-    return settings_lookup[llm_provider]()
+    return settings_lookup[provider]()
 
 
 settings = get_mcp_settings()
