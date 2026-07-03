@@ -30,6 +30,7 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
+from parliament_mcp.embeddings.get_provider import get_provider
 from parliament_mcp.models import (
     ContributionsResponse,
     DebateParent,
@@ -37,7 +38,6 @@ from parliament_mcp.models import (
     ParliamentaryQuestionsResponse,
     QdrantDocument,
 )
-from parliament_mcp.openai_helpers import embed_batch, get_openai_client
 from parliament_mcp.settings import ParliamentMCPSettings, settings
 
 logger = logging.getLogger(__name__)
@@ -122,7 +122,7 @@ class QdrantDataLoader:
         self.collection_name = collection_name
         self.settings = settings
         self.progress: Progress | None = None
-        self.openai_client = get_openai_client(self.settings)
+        self.provider = get_provider(self.settings)
 
         self.chunker = RecursiveChunker()
         self.sparse_text_embedding = SparseTextEmbedding(model_name="Qdrant/bm25")
@@ -180,12 +180,7 @@ class QdrantDataLoader:
 
         # Generate embeddings for chunks
         chunk_texts = [chunk["text"] for chunk in chunked_documents]
-        embedded_chunks = await embed_batch(
-            client=self.openai_client,
-            texts=chunk_texts,
-            model=self.settings.AZURE_OPENAI_EMBEDDING_MODEL,
-            dimensions=self.settings.EMBEDDING_DIMENSIONS,
-        )
+        embedded_chunks = await self.provider.embed_batch(texts=chunk_texts)
 
         sparse_embeddings = list(self.sparse_text_embedding.embed(chunk_texts))
 

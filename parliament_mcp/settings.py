@@ -9,6 +9,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 logger = logging.getLogger(__name__)
 
 
+class InvalidLLMProviderError(Exception):
+    pass
+
+
 @lru_cache
 def get_ssm_parameter(parameter_name: str, region: str = "eu-west-2") -> str:
     """Fetch a parameter from AWS Systems Manager Parameter Store."""
@@ -41,11 +45,72 @@ class ParliamentMCPSettings(BaseSettings):
     AWS_ACCOUNT_ID: str | None = None
     AWS_REGION: str = "eu-west-2"
     ENVIRONMENT: str = "local"
+    MODEL_PROVIDER: str = "azure_openai"
+
+    def _get_project_name(self) -> str:
+        """Get the project name from environment or use default."""
+        return os.environ.get("PROJECT_NAME", "i-dot-ai-dev-parliament-mcp")
 
     # Use SSM for sensitive parameters in AWS environments
     @property
     def SENTRY_DSN(self) -> str | None:
         return get_environment_or_ssm("SENTRY_DSN", f"/{self._get_project_name()}/env_secrets/SENTRY_DSN")
+
+    # Qdrant connection settings
+    @property
+    def QDRANT_URL(self) -> str | None:
+        return get_environment_or_ssm("QDRANT_URL", f"/{self._get_project_name()}/env_secrets/QDRANT_URL")
+
+    @property
+    def QDRANT_API_KEY(self) -> str | None:
+        return get_environment_or_ssm("QDRANT_API_KEY", f"/{self._get_project_name()}/env_secrets/QDRANT_API_KEY")
+
+    AUTH_PROVIDER_PUBLIC_KEY: str | None = None
+    DISABLE_AUTH_SIGNATURE_VERIFICATION: bool = ENVIRONMENT == "local"
+
+    # Qdrant collection names
+    QDRANT_COLLECTION_PREFIX: str = "parliament_mcp_"
+
+    # Sparse text embedding model
+    SPARSE_TEXT_EMBEDDING_MODEL: str = "Qdrant/bm25"
+
+    # Chunking settings
+    # See https://www.elastic.co/search-labs/blog/elasticsearch-chunking-inference-api-endpoints
+    CHUNK_SIZE: int = 300
+    SENTENCE_OVERLAP: int = 1
+    CHUNK_STRATEGY: str = "sentence"
+
+    PARLIAMENTARY_QUESTIONS_COLLECTION: str = "parliament_mcp_parliamentary_questions"
+    HANSARD_CONTRIBUTIONS_COLLECTION: str = "parliament_mcp_hansard_contributions"
+
+    # MCP settings
+    MCP_HOST: str = "0.0.0.0"  # nosec B104 - Binding to all interfaces is intentional for containerized deployment
+    MCP_PORT: int = 8080
+
+    # The MCP server can be accessed at /{MCP_ROOT_PATH}/mcp
+    MCP_ROOT_PATH: str = "/"
+
+    # Allowed hosts for MCP transport security (comma-separated)
+    # Used to prevent DNS rebinding attacks
+    @property
+    def MCP_ALLOWED_HOSTS(self) -> str | None:
+        return get_environment_or_ssm(
+            "MCP_ALLOWED_HOSTS",
+            f"/{self._get_project_name()}/env_secrets/MCP_ALLOWED_HOSTS",
+            default="localhost,127.0.0.1",
+        )
+
+    # Rate limiting settings for parliament.uk API.
+    HTTP_MAX_RATE_PER_SECOND: float = 10
+
+    # Load environment variables from .env file in local environment
+    # from pydantic_settings import SettingsConfigDict
+    if ENVIRONMENT == "local":
+        model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+
+class OpenAIParliamentMCPSettings(ParliamentMCPSettings):
+    """Configuration settings for Parliament MCP application with Azure OpenAI backend."""
 
     @property
     def AZURE_OPENAI_API_KEY(self) -> str:
@@ -76,57 +141,32 @@ class ParliamentMCPSettings(BaseSettings):
             "preview",
         )
 
-    # Qdrant connection settings
-    @property
-    def QDRANT_URL(self) -> str | None:
-        return get_environment_or_ssm("QDRANT_URL", f"/{self._get_project_name()}/env_secrets/QDRANT_URL")
+    EMBEDDING_DIMENSIONS: int = 1024
+
+
+class BedrockParliamentMCPSettings(ParliamentMCPSettings):
+    """Configuration settings for Parliament MCP application with AWS Bedrock backend."""
 
     @property
-    def QDRANT_API_KEY(self) -> str | None:
-        return get_environment_or_ssm("QDRANT_API_KEY", f"/{self._get_project_name()}/env_secrets/QDRANT_API_KEY")
-
-    AUTH_PROVIDER_PUBLIC_KEY: str | None = None
-    DISABLE_AUTH_SIGNATURE_VERIFICATION: bool = ENVIRONMENT == "local"
-
-    def _get_project_name(self) -> str:
-        """Get the project name from environment or use default."""
-        return os.environ.get("PROJECT_NAME", "i-dot-ai-dev-parliament-mcp")
-
-    # Qdrant collection names
-    QDRANT_COLLECTION_PREFIX: str = "parliament_mcp_"
+    def BEDROCK_EMBEDDINGS_MODEL(self) -> str:
+        return get_environment_or_ssm(
+            "BEDROCK_EMBEDDINGS_MODEL",
+            f"/{self._get_project_name()}/env_secrets/BEDROCK_EMBEDDINGS_MODEL",
+        )
 
     EMBEDDING_DIMENSIONS: int = 1024
 
-    # Sparse text embedding model
-    SPARSE_TEXT_EMBEDDING_MODEL: str = "Qdrant/bm25"
 
-    # Chunking settings
-    # See https://www.elastic.co/search-labs/blog/elasticsearch-chunking-inference-api-endpoints
-    CHUNK_SIZE: int = 300
-    SENTENCE_OVERLAP: int = 1
-    CHUNK_STRATEGY: str = "sentence"
+def get_mcp_settings():
+    settings_lookup = {"azure_openai": OpenAIParliamentMCPSettings, "aws_bedrock": BedrockParliamentMCPSettings}
 
-    PARLIAMENTARY_QUESTIONS_COLLECTION: str = "parliament_mcp_parliamentary_questions"
-    HANSARD_CONTRIBUTIONS_COLLECTION: str = "parliament_mcp_hansard_contributions"
+    default_settings = ParliamentMCPSettings()
+    provider = default_settings.MODEL_PROVIDER.lower()
+    if provider not in settings_lookup:
+        err_msg = f"MODEL_PROVIDER must be one of {list(settings_lookup.keys())}."
+        raise InvalidLLMProviderError(err_msg)
 
-    # MCP settings
-    MCP_HOST: str = "0.0.0.0"  # nosec B104 - Binding to all interfaces is intentional for containerized deployment
-    MCP_PORT: int = 8080
-
-    # The MCP server can be accessed at /{MCP_ROOT_PATH}/mcp
-    MCP_ROOT_PATH: str = "/"
-
-    # Allowed hosts for MCP transport security (comma-separated)
-    # Used to prevent DNS rebinding attacks
-    MCP_ALLOWED_HOSTS: str = "localhost,127.0.0.1"
-
-    # Rate limiting settings for parliament.uk API.
-    HTTP_MAX_RATE_PER_SECOND: float = 10
-
-    # Load environment variables from .env file in local environment
-    # from pydantic_settings import SettingsConfigDict
-    if ENVIRONMENT == "local":
-        model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    return settings_lookup[provider]()
 
 
-settings = ParliamentMCPSettings()
+settings = get_mcp_settings()
