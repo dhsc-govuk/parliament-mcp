@@ -45,6 +45,7 @@ class ParliamentMCPSettings(BaseSettings):
     AWS_ACCOUNT_ID: str | None = None
     AWS_REGION: str = "eu-west-2"
     ENVIRONMENT: str = "local"
+    MODEL_PROVIDER: str = "azure_openai"
 
     def _get_project_name(self) -> str:
         """Get the project name from environment or use default."""
@@ -97,14 +98,6 @@ class ParliamentMCPSettings(BaseSettings):
             "MCP_ALLOWED_HOSTS",
             f"/{self._get_project_name()}/env_secrets/MCP_ALLOWED_HOSTS",
             default="localhost,127.0.0.1",
-        )
-
-    @property
-    def MODEL_PROVIDER(self) -> str | None:
-        return get_environment_or_ssm(
-            "MODEL_PROVIDER",
-            f"/{self._get_project_name()}/env_secrets/MODEL_PROVIDER",
-            default="azure_openai",
         )
 
     # Rate limiting settings for parliament.uk API.
